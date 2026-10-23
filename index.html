@@ -5,39 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Proyek Valak330</title>
   <style>
-    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
-    .repo { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-    .repo h3 { margin: 0 0 4px; }
-    .repo p { margin: 0 0 6px; color: #555; }
-    a { color: #0969da; text-decoration: none; }
-    small a { margin-right: 10px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #e8ecff;
+      background: linear-gradient(135deg, #0f172a, #1e1b4b 50%, #312e81);
+      background-attachment: fixed;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 3rem; }
+    header { text-align: center; margin-bottom: 2rem; }
+    header img {
+      width: 110px; height: 110px; border-radius: 50%;
+      border: 3px solid #818cf8;
+      box-shadow: 0 0 25px rgba(129, 140, 248, .6);
+    }
+    h1 {
+      margin: .8rem 0 .2rem; font-size: 2rem;
+      background: linear-gradient(90deg, #a5b4fc, #f0abfc);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+    }
+    header p { margin: 0; color: #a5b4fc; }
+    #count { display: inline-block; margin-top: .6rem; padding: 4px 12px;
+      border-radius: 999px; background: rgba(255,255,255,.1); font-size: .85rem; }
+    #list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .repo {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px; padding: 16px;
+      backdrop-filter: blur(6px);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      display: flex; flex-direction: column;
+    }
+    .repo:hover {
+      transform: translateY(-5px);
+      border-color: #818cf8;
+      box-shadow: 0 10px 25px rgba(0,0,0,.4);
+    }
+    .repo h3 { margin: 0 0 6px; font-size: 1.1rem; word-break: break-word; }
+    .repo p { margin: 0 0 12px; color: #c7cdf5; font-size: .9rem; flex: 1; }
+    .meta { font-size: .78rem; color: #94a3d8; margin-bottom: 12px; }
+    .btns { display: flex; gap: 8px; }
+    .btn {
+      padding: 7px 12px; border-radius: 8px; font-size: .85rem;
+      text-decoration: none; color: #fff;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .btn.web { background: linear-gradient(90deg, #6366f1, #a855f7); border: none; }
+    .btn:hover { opacity: .85; }
+    footer { text-align: center; margin-top: 2.5rem; color: #7c86c9; font-size: .8rem; }
   </style>
 </head>
 <body>
-  <h1>Proyek Saya</h1>
-  <div id="list">Memuat...</div>
+  <div class="wrap">
+    <header>
+      <img src="https://github.com/Valak330.png" alt="Foto profil">
+      <h1>Valak330</h1>
+      <p>Kumpulan proyek dan karya saya</p>
+      <span id="count">Memuat...</span>
+    </header>
+
+    <div id="list"></div>
+
+    <footer>Daftar ini diperbarui otomatis dari GitHub</footer>
+  </div>
 
   <script>
     const USER = "Valak330";
+    const esc = s => (s || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
     fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`)
       .then(r => r.json())
       .then(repos => {
-        const list = document.getElementById("list");
         const items = repos.filter(r => !r.fork && r.name.toLowerCase() !== `${USER.toLowerCase()}.github.io`);
-        if (!items.length) { list.textContent = "Belum ada repo."; return; }
-        list.innerHTML = items.map(r => {
+        document.getElementById("count").textContent = items.length + " proyek";
+        document.getElementById("list").innerHTML = items.map(r => {
           const web = `https://${USER.toLowerCase()}.github.io/${r.name}/`;
+          const tgl = new Date(r.pushed_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
           return `<div class="repo">
-            <h3>${r.has_pages ? `<a href="${web}">${r.name}</a>` : r.name}</h3>
-            <p>${r.description || ""}</p>
-            <small>
-              ${r.has_pages ? `<a href="${web}">Buka web</a>` : ""}
-              <a href="${r.html_url}">Lihat kode</a>
-            </small>
-          </div>`;
-        }).join("");
-      })
-      .catch(() => document.getElementById("list").textContent = "Gagal memuat repo.");
-  </script>
-</body>
-</html>
+            <h3>${esc(r.name.replace(/[-_]/g, " "))}</h3>
+            <p>${esc(r.description) || "Belum ada deskripsi."}</p>
+            <div class="meta">${r.language ? esc(r.language) + " · " : ""}Diperbarui ${tgl}</div>
+            <div class="btns">
+              ${r.has_pages ? `<a
