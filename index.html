@@ -28,14 +28,15 @@
       color: transparent;
     }
     header p { margin: 0; color: #a5b4fc; }
-    #count { display: inline-block; margin-top: .6rem; padding: 4px 12px;
-      border-radius: 999px; background: rgba(255,255,255,.1); font-size: .85rem; }
+    #count {
+      display: inline-block; margin-top: .6rem; padding: 4px 12px;
+      border-radius: 999px; background: rgba(255,255,255,.1); font-size: .85rem;
+    }
     #list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
     .repo {
       background: rgba(255,255,255,.07);
       border: 1px solid rgba(255,255,255,.15);
       border-radius: 14px; padding: 16px;
-      backdrop-filter: blur(6px);
       transition: transform .2s, box-shadow .2s, border-color .2s;
       display: flex; flex-direction: column;
     }
@@ -73,20 +74,55 @@
   </div>
 
   <script>
-    const USER = "Valak330";
-    const esc = s => (s || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    var USER = "Valak330";
+    var countEl = document.getElementById("count");
+    var listEl = document.getElementById("list");
 
-    fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`)
-      .then(r => r.json())
-      .then(repos => {
-        const items = repos.filter(r => !r.fork && r.name.toLowerCase() !== `${USER.toLowerCase()}.github.io`);
-        document.getElementById("count").textContent = items.length + " proyek";
-        document.getElementById("list").innerHTML = items.map(r => {
-          const web = `https://${USER.toLowerCase()}.github.io/${r.name}/`;
-          const tgl = new Date(r.pushed_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-          return `<div class="repo">
-            <h3>${esc(r.name.replace(/[-_]/g, " "))}</h3>
-            <p>${esc(r.description) || "Belum ada deskripsi."}</p>
-            <div class="meta">${r.language ? esc(r.language) + " · " : ""}Diperbarui ${tgl}</div>
-            <div class="btns">
-              ${r.has_pages ? `<a
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text) e.textContent = text;
+      return e;
+    }
+
+    fetch("https://api.github.com/users/" + USER + "/repos?per_page=100&sort=updated")
+      .then(function (r) { return r.json(); })
+      .then(function (repos) {
+        if (!Array.isArray(repos)) {
+          countEl.textContent = "Gagal: " + (repos.message || "respon tidak dikenal");
+          return;
+        }
+        var items = repos.filter(function (r) {
+          return !r.fork && r.name.toLowerCase() !== USER.toLowerCase() + ".github.io";
+        });
+        countEl.textContent = items.length + " proyek";
+
+        items.forEach(function (r) {
+          var web = "https://" + USER.toLowerCase() + ".github.io/" + r.name + "/";
+          var tgl = new Date(r.pushed_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+
+          var card = el("div", "repo");
+          card.appendChild(el("h3", "", r.name.replace(/[-_]/g, " ")));
+          card.appendChild(el("p", "", r.description || "Belum ada deskripsi."));
+          card.appendChild(el("div", "meta", (r.language ? r.language + " · " : "") + "Diperbarui " + tgl));
+
+          var btns = el("div", "btns");
+          if (r.has_pages) {
+            var a1 = el("a", "btn web", "Buka web");
+            a1.href = web;
+            btns.appendChild(a1);
+          }
+          var a2 = el("a", "btn", "Kode");
+          a2.href = r.html_url;
+          btns.appendChild(a2);
+
+          card.appendChild(btns);
+          listEl.appendChild(card);
+        });
+      })
+      .catch(function (err) {
+        countEl.textContent = "Error: " + err.message;
+      });
+  </script>
+</body>
+</html>
