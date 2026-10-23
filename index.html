@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proyek Valak330</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+    .repo { border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .repo h3 { margin: 0 0 4px; }
+    .repo p { margin: 0 0 6px; color: #555; }
+    a { color: #0969da; text-decoration: none; }
+    small a { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Proyek Saya</h1>
+  <div id="list">Memuat...</div>
+
+  <script>
+    const USER = "Valak330";
+    fetch(`https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`)
+      .then(r => r.json())
+      .then(repos => {
+        const list = document.getElementById("list");
+        const items = repos.filter(r => !r.fork && r.name.toLowerCase() !== `${USER.toLowerCase()}.github.io`);
+        if (!items.length) { list.textContent = "Belum ada repo."; return; }
+        list.innerHTML = items.map(r => {
+          const web = `https://${USER.toLowerCase()}.github.io/${r.name}/`;
+          return `<div class="repo">
+            <h3>${r.has_pages ? `<a href="${web}">${r.name}</a>` : r.name}</h3>
+            <p>${r.description || ""}</p>
+            <small>
+              ${r.has_pages ? `<a href="${web}">Buka web</a>` : ""}
+              <a href="${r.html_url}">Lihat kode</a>
+            </small>
+          </div>`;
+        }).join("");
+      })
+      .catch(() => document.getElementById("list").textContent = "Gagal memuat repo.");
+  </script>
+</body>
+</html>
